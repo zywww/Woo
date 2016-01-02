@@ -12,6 +12,7 @@ class Parse {
 public:
     list<Token *> Tokenlist;
 
+    Parse();
 };
 
 

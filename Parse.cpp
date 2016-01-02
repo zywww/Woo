@@ -25,3 +25,7 @@ enum TokenSymbol {
     T_BLANK
 
 };
+
+Parse::Parse() {
+
+}
