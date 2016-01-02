@@ -4,8 +4,10 @@
 
 #ifndef MYCOMPILER_PARSE_H
 #define MYCOMPILER_PARSE_H
+
 #include "Token.h"
 #include <list>
+
 class Parse {
 public:
     list<Token *> Tokenlist;

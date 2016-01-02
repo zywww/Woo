@@ -53,8 +53,8 @@ void Scan::getToken() {
 
     fstream in;
     ofstream out;
-    in.open("/Users/TanGreen/ClionProjects/mycompiler/Debug/main.txt");
-    out.open("/Users/TanGreen/ClionProjects/mycompiler/Debug/out.txt",ios::trunc);
+    in.open("/Users/TanGreen/ClionProjects/Woo/Debug/main.txt");
+    out.open("/Users/TanGreen/ClionProjects/Woo/Debug/out.txt",ios::trunc);
 
     string ts;
     int line = 0;

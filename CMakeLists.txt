@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.3)
-project(mycompiler)
+project(Woo)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
@@ -16,4 +16,4 @@ set(SOURCE_FILES
         RexHandle.cpp
         RexHandle.h Token.cpp Token.h Parse.cpp Parse.h)
 
-add_executable(mycompiler ${SOURCE_FILES})
+add_executable(Woo ${SOURCE_FILES})
