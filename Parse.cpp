@@ -4,6 +4,7 @@
 
 #include "Parse.h"
 
+
 enum TokenSymbol {
     T_DEF,
     T_STRING,

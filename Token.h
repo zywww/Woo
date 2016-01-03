@@ -10,7 +10,7 @@
 #include <map>
 #include <string>
 #include <list>
-#include "RexHandle.h"
+#include "Regex/RexHandle.h"
 
 using namespace std;
 
