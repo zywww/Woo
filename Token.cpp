@@ -25,8 +25,9 @@ enum TokenSymbol {
     T_ADD,
     T_MUL,
     T_COMMA,
+    T_END,
+    T_EXTERN,
     T_BLANK
-
 };
 
 
@@ -47,6 +48,7 @@ void Scan::getToken() {
                + string("|") + string(T_map[T_ADD])
                + string("|") + string(T_map[T_MUL])
                + string("|") + string(T_map[T_COMMA]);
+
     RexHandle rh;
     rh.setRextext(s);
     rh.run();
@@ -120,6 +122,8 @@ int Scan::getTokenId(string s) {
     if (s == "*"||s == "/")        return T_MUL;
     if (s == ",")                  return T_COMMA;
     if (s == "def")                return T_DEF;
+    if (s == "extern") return T_EXTERN;
+    if (s == "end") return T_END;
     for (int i = 0; i < s.size(); ++i) {
         if(!(s[i]>=0&&s[i]<=9))
             break;

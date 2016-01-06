@@ -10,7 +10,7 @@ set(SOURCE_FILES
         Regex/GraphNode.h
         Regex/LineLink.cpp
         Regex/LineLink.h
-        Regex/main.cpp
+        main.cpp
         Regex/NfaToDfa.cpp
         Regex/NfaToDfa.h
         Regex/RexHandle.cpp
