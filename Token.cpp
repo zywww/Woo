@@ -23,7 +23,9 @@ enum TokenSymbol {
     T_BRACE_LR,
     T_EQUAL,
     T_ADD,
+    T_MIN,
     T_MUL,
+    T_DIV,
     T_COMMA,
     T_END,
     T_EXTERN,
@@ -46,7 +48,9 @@ void Scan::getToken() {
                + string("|") + string(T_map[T_BRACE_LR])
                + string("|") + string(T_map[T_EQUAL])
                + string("|") + string(T_map[T_ADD])
+               + string("|") + string(T_map[T_MIN])
                + string("|") + string(T_map[T_MUL])
+               + string("|") + string(T_map[T_DIV])
                + string("|") + string(T_map[T_COMMA]);
 
     RexHandle rh;
@@ -83,11 +87,7 @@ void Scan::getToken() {
 }
 
 Scan::Scan() {
-    T_map.insert(pair<int, string>(T_STRING,     string("string")));
-    T_map.insert(pair<int, string>(T_INT,        string("int")));
     T_map.insert(pair<int, string>(T_IDENTIFIER, string(REX_CHAR) + string("*")));//TODO add '+' to regex system is better
-    T_map.insert(pair<int, string>(T_IF,         string("if")));
-    T_map.insert(pair<int, string>(T_WHILE,      string("while")));
     T_map.insert(pair<int, string>(T_NUMBER,     string(REX_NUMBER) + string("*")));
     T_map.insert(pair<int, string>(T_BRACE_SL,   string("\\(")));
     T_map.insert(pair<int, string>(T_BRACE_SR,   string("\\)")));
@@ -96,13 +96,12 @@ Scan::Scan() {
     T_map.insert(pair<int, string>(T_BRACE_LL,   string("\\{")));
     T_map.insert(pair<int, string>(T_BRACE_LR,   string("\\}")));
     T_map.insert(pair<int, string>(T_EQUAL,      string("\\=")));
-    T_map.insert(pair<int, string>(T_ADD,        string("\\+|\\-")));
-    T_map.insert(pair<int, string>(T_MUL,        string("\\*|\\/")));
-    T_map.insert(pair<int, string>(T_MUL,        string("\\*|\\/")));
+    T_map.insert(pair<int, string>(T_ADD, string("\\+")));
+    T_map.insert(pair<int, string>(T_MIN, string("\\-")));
+    T_map.insert(pair<int, string>(T_MUL, string("\\*")));
+    T_map.insert(pair<int, string>(T_DIV, string("\\/")));
     T_map.insert(pair<int, string>(T_COMMA,      string("\\,")));
     T_map.insert(pair<int, string>(T_BLANK,      string("\32*")));
-    T_map.insert(pair<int, string>(T_DEF,        string("def")));
-
 }
 
 int Scan::getTokenId(string s) {
@@ -125,9 +124,9 @@ int Scan::getTokenId(string s) {
     if (s == "extern") return T_EXTERN;
     if (s == "end") return T_END;
     for (int i = 0; i < s.size(); ++i) {
-        if(!(s[i]>=0&&s[i]<=9))
+        if (!(s[i] >= '0' && s[i] <= '9'))
             break;
-        else if(i==s.size()) return T_NUMBER;
+        if (i == s.size() - 1) return T_NUMBER;
     }
     return T_IDENTIFIER;
 }

@@ -3,6 +3,7 @@
 //
 
 #include "Parse.h"
+#include <sstream>
 
 
 enum TokenSymbol {
@@ -21,19 +22,37 @@ enum TokenSymbol {
     T_BRACE_LR,
     T_EQUAL,
     T_ADD,
+    T_MIN,
     T_MUL,
+    T_DIV,
     T_COMMA,
     T_END,
     T_EXTERN,
     T_BLANK
 };
-static int precedenceArray[T_BLANK + 1];
 
+static string getRegistSymbol(int i) {
+    switch (i) {
+        case -1:
+            return "RT";
+        case -2:
+            return "PC";
+        case -3:
+            return "AC";
+        default:
+            return "";
+    }
+}
+
+//static map<string, IRitem* > IRTable;
+static map<string, int> LogicMem;
+static string asmfile = "/Users/TanGreen/ClionProjects/Woo/Debug/asm.txt";
+static int precedenceArray[T_BLANK + 1];
 static list<Token *> Tokenlist;
 static list<Token *>::iterator it;
 static int CurTok;
-static std::string IdentifierStr;  // Filled in if T_IDENTIFIER
-static double NumVal;              // Filled in if T_NUMBER
+static string IdentifierStr;  // Filled in if T_IDENTIFIER
+static int NumVal;              // Filled in if T_NUMBER
 
 //
 static int gettok() {
@@ -41,7 +60,7 @@ static int gettok() {
         Token *tmp = *it;
         switch (tmp->token) {
             case T_NUMBER:
-                NumVal = atof(tmp->value.c_str());
+                NumVal = atoi(tmp->value.c_str());
                 return T_NUMBER;
             case T_IDENTIFIER:
                 IdentifierStr = tmp->value;
@@ -59,6 +78,8 @@ static int gettok() {
             case T_BRACE_LR:
             case T_EQUAL:
             case T_ADD:
+            case T_MIN:
+            case T_DIV:
             case T_MUL:
             case T_COMMA:
             case T_BLANK:
@@ -231,14 +252,34 @@ static shared_ptr<FunctionAST> ParseDefinition() {
     return 0;
 }
 
-/// toplevelexpr ::= expression
+/* assignmentexpr
+ * */
+static shared_ptr<AssignmentAST> ParseAssignmentExpr() {
+    shared_ptr<ExprAST> var = ParseIdentifierExpr();
+    if (!var)
+        return 0;
+    if (CurTok != T_EQUAL)
+        return shared_ptr<AssignmentAST>(new AssignmentAST(var, shared_ptr<ExprAST>(new ExprAST))); //int a 令a初始化为0
+    getNextToken(); //eat '='
+    shared_ptr<ExprAST> expr = ParseExpression();
+    if (!expr)
+        return 0;
+    return shared_ptr<AssignmentAST>(new AssignmentAST(var, expr));
+}
+
+
+/* toplevelexpr
+ * ::= expression
+ * ::= assignment
+ * */
 static shared_ptr<FunctionAST> ParseTopLevelExpr() {
-    if (shared_ptr<ExprAST> E = ParseExpression()) {
+    shared_ptr<ExprAST> E = ParseAssignmentExpr();
+    if (E) {
+        E->codegen();
         vector<string> empty;
         shared_ptr<PrototypeAST> Proto = shared_ptr<PrototypeAST>(new PrototypeAST("", empty));
         return shared_ptr<FunctionAST>(new FunctionAST(Proto, E));
-    }
-    return 0;
+    } else return 0;
 }
 
 /// external ::= 'extern' prototype
@@ -312,5 +353,72 @@ void Parse::test() {
 }
 
 
+string ExprAST::codegen() {
 
+}
 
+string NumberExprAST::codegen() {
+    stringstream ss;
+    ss << this->Val;
+    string s;
+    ss >> s;
+    LogicMem[s] = this->Val;
+    return s;
+}
+
+string VariableExprAST::codegen() {
+    LogicMem[this->Name] = 0;
+    return this->Name;
+}
+
+string BinaryExprAST::codegen() {
+    string laddr = LHS->codegen();
+    string raddr = RHS->codegen();
+    ofstream fout;
+    fout.open(asmfile, ios::app);
+    stringstream ss;
+    ss << 't' << LogicMem.size();
+    string s;
+    ss >> s;
+    switch (Op) {
+        case T_ADD:
+            fout << s << " + " << laddr << " " << raddr << endl;
+            break;
+        case T_MIN:
+            fout << s << " + " << laddr << " " << raddr << endl;
+            break;
+        default:
+            break;
+    }
+    fout.close();
+    LogicMem[s] = 0; //add a mem item
+    return s;
+}
+
+string CallExprAST::codegen() {
+    return ExprAST::codegen();
+}
+
+string PrototypeAST::codegen() {
+    return ExprAST::codegen();
+}
+
+string FunctionAST::codegen() {
+    return ExprAST::codegen();
+}
+
+string AssignmentAST::codegen() {
+    string varaddr = Var->codegen();
+    string rhsaddr = RHS->codegen();
+    ofstream fout;
+    fout.open(asmfile, ios::app);
+    stringstream ss;
+    ss << 't' << LogicMem.size();
+    string s;
+    ss >> s;
+    fout << s << " = " << rhsaddr << endl;
+    fout << varaddr << " = " << s << endl;
+    LogicMem[s] = 0;
+    fout.close();
+    return varaddr;
+}
