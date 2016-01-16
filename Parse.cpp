@@ -20,7 +20,9 @@ enum TokenSymbol {
     T_BRACE_MR,
     T_BRACE_LL,
     T_BRACE_LR,
+    T_GEQUAL,
     T_EQUAL,
+    T_LEQUAL,
     T_ADD,
     T_MIN,
     T_MUL,
@@ -28,21 +30,10 @@ enum TokenSymbol {
     T_COMMA,
     T_END,
     T_EXTERN,
+    T_RETURN,
     T_BLANK
-};
 
-static string getRegistSymbol(int i) {
-    switch (i) {
-        case -1:
-            return "RT";
-        case -2:
-            return "PC";
-        case -3:
-            return "AC";
-        default:
-            return "";
-    }
-}
+};
 
 //static map<string, IRitem* > IRTable;
 static map<string, int> LogicMem;
@@ -83,6 +74,7 @@ static int gettok() {
             case T_MUL:
             case T_COMMA:
             case T_BLANK:
+            case T_RETURN:
             default:
                 return tmp->token;
         }
@@ -207,7 +199,7 @@ static shared_ptr<ExprAST> ParseBinOpRHS(int lasprec, shared_ptr<ExprAST> LHS) {
     }
 }
 
-/* expression           完整的表达式语法结束
+/* expression           完整的表达式语法结束  右值表达式
  * ::= primary binoprhs
  * */
 static shared_ptr<ExprAST> ParseExpression() {
@@ -216,6 +208,42 @@ static shared_ptr<ExprAST> ParseExpression() {
         return 0;
     return ParseBinOpRHS(1, LHS);
 }
+
+
+/* assignmentexpr
+ * */
+static shared_ptr<AssignmentAST> ParseAssignmentExpr() {
+    shared_ptr<ExprAST> var = ParseIdentifierExpr();
+    if (!var)
+        return 0;
+    if (CurTok != T_EQUAL)
+        return shared_ptr<AssignmentAST>(new AssignmentAST(var, shared_ptr<ExprAST>(new ExprAST))); //int a 令a初始化为0
+    getNextToken(); //eat '='
+    shared_ptr<ExprAST> expr = ParseExpression();
+    if (!expr)
+        return 0;
+    return shared_ptr<AssignmentAST>(new AssignmentAST(var, expr));
+}
+
+/* returnexpr
+ * */
+static shared_ptr<ExprAST> ParseReturnExpr() {
+    getNextToken();//eat return
+    return shared_ptr<ExprAST>(new ReturnAST(ParseExpression()));
+}
+
+/* localexpression           完整的表达式语法结束  左值表达式
+ * ::= assignment | returnexpr
+ * */
+static shared_ptr<ExprAST> ParseLocalExpression() {
+    if (CurTok == T_RETURN)
+        return ParseReturnExpr();
+    if (CurTok == T_IDENTIFIER)
+        return ParseAssignmentExpr();
+    fprintf(stderr, "non valid expression");
+    return 0;
+}
+
 
 /* prototype                                   函数接口 只用于函数定义,外部函数,函数的前置声明
  * ::= identifierexpr '(' identifierexpr* ')'  注意,这里的id是指的产生式
@@ -243,42 +271,31 @@ static shared_ptr<PrototypeAST> ParsePrototype() {
 static shared_ptr<FunctionAST> ParseDefinition() {
     getNextToken();  // eat def.
     shared_ptr<PrototypeAST> Proto = ParsePrototype();
+    vector<shared_ptr<ExprAST> > body;
     if (Proto == 0) return 0;
-    if (shared_ptr<ExprAST> E = ParseExpression()) {
-        if (CurTok == T_END)
-            return shared_ptr<FunctionAST>(new FunctionAST(Proto, E));
-        else return ErrorF("expected 'end' in function definition");
+    while (shared_ptr<ExprAST> E = ParseLocalExpression()) {
+        if (CurTok == T_END) {
+            body.push_back(E);
+            getNextToken(); //eat T_END
+            return shared_ptr<FunctionAST>(new FunctionAST(Proto, body));
+        }
+        else body.push_back(E);
     }
+    fprintf(stderr, "expect a expression or missing 'end'.\n");
     return 0;
 }
 
-/* assignmentexpr
- * */
-static shared_ptr<AssignmentAST> ParseAssignmentExpr() {
-    shared_ptr<ExprAST> var = ParseIdentifierExpr();
-    if (!var)
-        return 0;
-    if (CurTok != T_EQUAL)
-        return shared_ptr<AssignmentAST>(new AssignmentAST(var, shared_ptr<ExprAST>(new ExprAST))); //int a 令a初始化为0
-    getNextToken(); //eat '='
-    shared_ptr<ExprAST> expr = ParseExpression();
-    if (!expr)
-        return 0;
-    return shared_ptr<AssignmentAST>(new AssignmentAST(var, expr));
-}
+
 
 
 /* toplevelexpr
  * ::= expression
  * ::= assignment
  * */
-static shared_ptr<FunctionAST> ParseTopLevelExpr() {
+static shared_ptr<ExprAST> ParseTopLevelExpr() {
     shared_ptr<ExprAST> E = ParseAssignmentExpr();
     if (E) {
-        E->codegen();
-        vector<string> empty;
-        shared_ptr<PrototypeAST> Proto = shared_ptr<PrototypeAST>(new PrototypeAST("", empty));
-        return shared_ptr<FunctionAST>(new FunctionAST(Proto, E));
+        return E;
     } else return 0;
 }
 
@@ -290,7 +307,8 @@ static shared_ptr<PrototypeAST> ParseExtern() {
 
 
 static void HandleDefinition() {
-    if (ParseDefinition()) {
+    if (shared_ptr<ExprAST> E = ParseDefinition()) {
+        E->codegen();
         fprintf(stderr, "Parsed a function definition.\n");
     } else {
         getNextToken();
@@ -298,7 +316,7 @@ static void HandleDefinition() {
 }
 
 static void HandleExtern() {
-    if (ParseExtern()) {
+    if (shared_ptr<ExprAST> E = ParseExtern()) {
         fprintf(stderr, "Parsed an extern\n");
     } else {
         getNextToken();
@@ -306,7 +324,8 @@ static void HandleExtern() {
 }
 
 static void HandleTopLevelExpression() {
-    if (ParseTopLevelExpr()) {
+    if (shared_ptr<ExprAST> E = ParseTopLevelExpr()) {
+        E->codegen();
         fprintf(stderr, "Parsed a top-level expr\n");
     } else {
         getNextToken();
@@ -320,9 +339,6 @@ static void MainLoop() {
         switch (CurTok) {
             case -1:
                 return;
-            case T_END:
-                getNextToken();
-                break;  // ignore top-level semicolons.
             case T_DEF:
                 HandleDefinition();
                 break;
@@ -354,7 +370,7 @@ void Parse::test() {
 
 
 string ExprAST::codegen() {
-
+    return "";
 }
 
 string NumberExprAST::codegen() {
@@ -396,15 +412,45 @@ string BinaryExprAST::codegen() {
 }
 
 string CallExprAST::codegen() {
-    return ExprAST::codegen();
+    //param list
+    ofstream fout;
+    fout.open(asmfile, ios::app);
+    vector<string> params;
+    for (auto pa : this->Args) {
+        params.push_back(pa->codegen());
+    }
+    for (auto t : params) {
+        fout << "param " << t << endl;
+    }
+    stringstream ss;
+    ss << 't' << LogicMem.size();
+    string s;
+    ss >> s;
+    fout << s << " = " << "call " << this->Callna << " " << params.size() << endl;
+    LogicMem[s] = 0;
+    fout.close();
+    return s;
 }
 
 string PrototypeAST::codegen() {
-    return ExprAST::codegen();
+    ofstream fout;
+    fout.open(asmfile, ios::app);
+    fout << "FUNCTION " << this->Name << endl;
+    for (auto tmp : this->Args) {
+        fout << "param " << tmp << endl;
+    }
+
+    fout.close();
+    return "";
 }
 
 string FunctionAST::codegen() {
-    return ExprAST::codegen();
+
+    this->Proto->codegen();
+    for (auto tmp : this->Body) {
+        tmp->codegen();
+    }
+    return "";
 }
 
 string AssignmentAST::codegen() {
@@ -421,4 +467,18 @@ string AssignmentAST::codegen() {
     LogicMem[s] = 0;
     fout.close();
     return varaddr;
+}
+
+string ReturnAST::codegen() {
+    string tmp = this->rtVal->codegen();
+    ofstream fout;
+    fout.open(asmfile, ios::app);
+    stringstream ss;
+    ss << 't' << LogicMem.size();
+    string s;
+    ss >> s;
+    fout << "RETURN " << s << " " << tmp << endl;
+    LogicMem[s] = 0;
+    fout.close();
+    return s;
 }

@@ -21,7 +21,9 @@ enum TokenSymbol {
     T_BRACE_MR,
     T_BRACE_LL,
     T_BRACE_LR,
+    T_GEQUAL,
     T_EQUAL,
+    T_LEQUAL,
     T_ADD,
     T_MIN,
     T_MUL,
@@ -29,7 +31,9 @@ enum TokenSymbol {
     T_COMMA,
     T_END,
     T_EXTERN,
+    T_RETURN,
     T_BLANK
+
 };
 
 
@@ -46,7 +50,9 @@ void Scan::getToken() {
                + string("|") + string(T_map[T_BRACE_MR])
                + string("|") + string(T_map[T_BRACE_LL])
                + string("|") + string(T_map[T_BRACE_LR])
+               + string("|") + string(T_map[T_GEQUAL])
                + string("|") + string(T_map[T_EQUAL])
+               + string("|") + string(T_map[T_LEQUAL])
                + string("|") + string(T_map[T_ADD])
                + string("|") + string(T_map[T_MIN])
                + string("|") + string(T_map[T_MUL])
@@ -87,7 +93,8 @@ void Scan::getToken() {
 }
 
 Scan::Scan() {
-    T_map.insert(pair<int, string>(T_IDENTIFIER, string(REX_CHAR) + string("*")));//TODO add '+' to regex system is better
+    T_map.insert(
+            pair<int, string>(T_IDENTIFIER, string(REX_CHAR) + string("*")));//TODO add '+' to regex engine is better
     T_map.insert(pair<int, string>(T_NUMBER,     string(REX_NUMBER) + string("*")));
     T_map.insert(pair<int, string>(T_BRACE_SL,   string("\\(")));
     T_map.insert(pair<int, string>(T_BRACE_SR,   string("\\)")));
@@ -95,7 +102,9 @@ Scan::Scan() {
     T_map.insert(pair<int, string>(T_BRACE_MR,   string("\\]")));
     T_map.insert(pair<int, string>(T_BRACE_LL,   string("\\{")));
     T_map.insert(pair<int, string>(T_BRACE_LR,   string("\\}")));
+    T_map.insert(pair<int, string>(T_GEQUAL, string("\\>")));
     T_map.insert(pair<int, string>(T_EQUAL,      string("\\=")));
+    T_map.insert(pair<int, string>(T_LEQUAL, string("\\<")));
     T_map.insert(pair<int, string>(T_ADD, string("\\+")));
     T_map.insert(pair<int, string>(T_MIN, string("\\-")));
     T_map.insert(pair<int, string>(T_MUL, string("\\*")));
@@ -123,6 +132,7 @@ int Scan::getTokenId(string s) {
     if (s == "def")                return T_DEF;
     if (s == "extern") return T_EXTERN;
     if (s == "end") return T_END;
+    if (s == "return") return T_RETURN;
     for (int i = 0; i < s.size(); ++i) {
         if (!(s[i] >= '0' && s[i] <= '9'))
             break;

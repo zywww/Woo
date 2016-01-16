@@ -62,7 +62,8 @@ public:
     unsigned int getType() { return Ty_bincombo; }
 
     string codegen();
-    BinaryExprAST(char op, shared_ptr<ExprAST> lhs, shared_ptr<ExprAST> rhs) : Op(op), LHS(lhs), RHS(rhs) { }
+
+    BinaryExprAST(int op, shared_ptr<ExprAST> lhs, shared_ptr<ExprAST> rhs) : Op(op), LHS(lhs), RHS(rhs) { }
 };
 
 class CallExprAST : public ExprAST {
@@ -85,10 +86,11 @@ public:
 //function definition
 class FunctionAST : public ExprAST {
     shared_ptr<PrototypeAST> Proto;
-    shared_ptr<ExprAST> Body;
+    vector<shared_ptr<ExprAST> > Body;
 public:
     string codegen();
-    FunctionAST(shared_ptr<PrototypeAST> proto, shared_ptr<ExprAST> body) : Proto(proto), Body(body) { }
+
+    FunctionAST(shared_ptr<PrototypeAST> proto, vector<shared_ptr<ExprAST> > body) : Proto(proto), Body(body) { }
 };
 
 //assignment
@@ -99,6 +101,24 @@ public:
     string codegen();
 
     AssignmentAST(shared_ptr<ExprAST> var, shared_ptr<ExprAST> rhs) : Var(var), RHS(rhs) { }
+};
+
+//return
+class ReturnAST : public ExprAST {
+    shared_ptr<ExprAST> rtVal;
+public:
+    string codegen();
+
+    ReturnAST(shared_ptr<ExprAST> var) : rtVal(var) { }
+};
+
+//while
+class WhileAST : public ExprAST {
+};
+
+//foreach
+class ForeachAST : public ExprAST {
+
 };
 
 //IR items
