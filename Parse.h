@@ -131,22 +131,31 @@ public:
     string codegen();
 };
 
+//if
+class IfAST : public ExprAST {
+    shared_ptr<ExprAST> condExpr;
+    vector<shared_ptr<ExprAST> > Body;
+public:
+    IfAST(shared_ptr<ExprAST> cexpr, vector<shared_ptr<ExprAST> > body) : condExpr(cexpr), Body(body) {
+    }
+
+    string codegen();
+};
+
 //foreach
 class ForeachAST : public ExprAST {
 
 };
 
-//built-in function
-class builtinfunctionAST : public ExprAST {
-    string Name;
-    shared_ptr<ExprAST> Args;
+//const string
+class ConststringAST : public ExprAST {
+    const string Content;
 public:
-    builtinfunctionAST(string functionname, shared_ptr<ExprAST> args) : Name(functionname), Args(args) {
-
+    ConststringAST(const string s) : Content(s) {
     }
-
     string codegen();
 };
+
 //IR items
 class IRitem {
 public:

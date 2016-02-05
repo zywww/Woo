@@ -37,6 +37,8 @@ enum TokenSymbol {
     T_END,
     T_EXTERN,
     T_RETURN,
+    T_SQUOTE,
+    T_DQUOTE,
     T_BLANK
 
 };
@@ -63,7 +65,10 @@ void Scan::getToken() {
                + string("|") + string(T_map[T_MIN])
                + string("|") + string(T_map[T_MUL])
                + string("|") + string(T_map[T_DIV])
-               + string("|") + string(T_map[T_COMMA]);
+               + string("|") + string(T_map[T_COMMA])
+               + string("|") + string(T_map[T_SQUOTE])
+               + string("|") + string(T_map[T_DQUOTE])
+               + string("|") + string(T_map[T_BLANK]);
 
     RexHandle rh;
     rh.setRextext(s);
@@ -85,7 +90,7 @@ void Scan::getToken() {
                 Token *ttoken = new Token;
                 ttoken->start = tpair[i].first;
                 ttoken->end = tpair[i].second;
-                string tmp = ts.substr(ttoken->start, ttoken->end-ttoken->start+1);
+                string tmp = ts.substr((unsigned long) ttoken->start, (unsigned long) ttoken->end - ttoken->start + 1);
                 ttoken->token = getTokenId(tmp);
                 ttoken->value = tmp;
                 ttoken->lineIndex = line;
@@ -117,7 +122,10 @@ Scan::Scan() {
     T_map.insert(pair<int, string>(T_MUL, string("\\*")));
     T_map.insert(pair<int, string>(T_DIV, string("\\/")));
     T_map.insert(pair<int, string>(T_COMMA, string("\\,")));
-    T_map.insert(pair<int, string>(T_BLANK, string("\32*")));
+    T_map.insert(pair<int, string>(T_SQUOTE, string("\\'")));
+    T_map.insert(pair<int, string>(T_DQUOTE, string("\\\"")));
+    T_map.insert(pair<int, string>(T_BLANK, string("\\ ")));   //here blank don't need escape !!!! WTF
+
 }
 
 int Scan::getTokenId(string s) {
@@ -139,10 +147,13 @@ int Scan::getTokenId(string s) {
     if (s == "+"||s == "-")        return T_ADD;
     if (s == "*"||s == "/")        return T_MUL;
     if (s == ",")                  return T_COMMA;
+    if (s == "'") return T_SQUOTE;
+    if (s == "\"") return T_DQUOTE;
     if (s == "def")                return T_DEF;
     if (s == "extern") return T_EXTERN;
     if (s == "end") return T_END;
     if (s == "return") return T_RETURN;
+    if (s == " ") return T_BLANK;
 
     for (int i = 0; i < s.size(); ++i) {
         if (!(s[i] >= '0' && s[i] <= '9'))

@@ -35,6 +35,8 @@ enum TokenSymbol {
     T_END,
     T_EXTERN,
     T_RETURN,
+    T_SQUOTE,
+    T_DQUOTE,
     T_BLANK
 
 };
@@ -43,7 +45,7 @@ enum TokenSymbol {
 static int labelcount;
 static map<string, int> LogicMem;
 static string asmfile = "/Users/TanGreen/ClionProjects/Woo/Debug/asm.txt";
-static int precedenceArray[T_BLANK + 1];
+static int precedenceArray[T_BLANK + 1];  //all initial to 0
 static list<Token *> Tokenlist;
 static list<Token *>::iterator it;
 static int CurTok;
@@ -141,6 +143,7 @@ static shared_ptr<ExprAST> ParseIdentifierExpr() {
             getNextToken(); //eat ','
         }
     }
+    if (CurTok == T_BRACE_SR) getNextToken(); //eat ')'
     return shared_ptr<ExprAST>(new CallExprAST(IdName, Args));
 }
 
@@ -149,6 +152,22 @@ static shared_ptr<ExprAST> ParseIdentifierExpr() {
  * */
 static shared_ptr<ExprAST> ParseNumberExpr() {
     shared_ptr<ExprAST> result = shared_ptr<ExprAST>(new NumberExprAST(NumVal));
+    getNextToken();
+    return result;
+}
+
+/*
+ * conststringexpr
+ * ::= const string
+ */
+static shared_ptr<ExprAST> ParseConststringExpr() {
+    getNextToken(); //eat " or '
+    string tmp;
+    while (CurTok != T_SQUOTE && CurTok != T_DQUOTE) {
+        tmp = tmp + IdentifierStr;
+        getNextToken();
+    }
+    shared_ptr<ExprAST> result = shared_ptr<ExprAST>(new ConststringAST(tmp));
     getNextToken();
     return result;
 }
@@ -170,6 +189,7 @@ static shared_ptr<ExprAST> ParseParenExpr() {
  * ::= identifierexpr   变量,函数调用的表达式
  * ::= numberexpr       字面值(数字)表达式
  * ::= parenexpr        带括号的表达式
+ * ::= const string
  * */
 static shared_ptr<ExprAST> ParsePrimary() {
     switch (CurTok) {
@@ -179,6 +199,10 @@ static shared_ptr<ExprAST> ParsePrimary() {
             return ParseIdentifierExpr();
         case T_NUMBER:
             return ParseNumberExpr();
+        case T_DQUOTE:
+            return ParseConststringExpr();
+        case T_SQUOTE:
+            return ParseConststringExpr();
         default:
             return Error("unknown token when expected an expression  ");
     }
@@ -450,6 +474,28 @@ Parse::Parse(list<Token *> &list) {
 
 
 void Parse::test() {
+    //remove the no use blank  &&  change all of the string contents to T_IDENTIFIER
+    for (list<Token *>::iterator it = Tokenlist.begin(); it != Tokenlist.end(); it++) {
+        if ((((*it)->token) == T_DQUOTE) || (((*it)->token) == T_SQUOTE)) {
+            //cout<<"1:"<<(*it)->value<<endl;
+            ++it;
+            if (it == Tokenlist.end())
+                break;
+            while ((((*it)->token) != T_DQUOTE) && (((*it)->token) != T_SQUOTE)) {
+                //cout<<"2:"<<(*it)->value<<endl;
+                (*it)->token = T_IDENTIFIER;
+                if (it == Tokenlist.end())
+                    break;
+                ++it;
+            }
+        }
+        else if ((*it)->token == T_BLANK) {
+            //cout<<"3:"<<(*it)->value<<endl;
+            it = Tokenlist.erase(it);
+            --it;
+        }
+    }
+
     it = Tokenlist.begin();
     it--;
     getNextToken();
@@ -479,6 +525,7 @@ string VariableExprAST::codegen() {
     LogicMem[this->Name] = 0;
     return this->Name;
 }
+
 
 string BinaryExprAST::codegen() {
     string laddr = LHS->codegen();
@@ -606,8 +653,8 @@ string WhileAST::codegen() {
 
     ofstream fout;
     fout.open(asmfile, ios::app);
-    fout << "LABEL " << labelcount << endl;
-    fout << "IFFALSE " << s << " GOTO LABEL " << labelcount + 1 << endl;
+
+    fout << "IF " << s << " GOTO LABEL " << labelcount + 1 << endl;
     fout.close();
 
     for (auto it : this->Body) {
@@ -623,10 +670,16 @@ string WhileAST::codegen() {
 
 string ConditionAST::codegen() {    //条件表达式一般是被其他控制结构的codegen()调用,所以这里返回值要特殊处理一下.
     string s;
+
+    ofstream fout;                  // lable 必须放在这,不然参数回填有麻烦
+    fout.open(asmfile, ios::app);
+    fout << "LABEL " << ++labelcount << endl;
+    fout.close();
+
     string l = this->LHS->codegen();
     string r = this->RHS->codegen();
 
-    ofstream fout;
+
     fout.open(asmfile, ios::app);
     stringstream lss;
     lss << 't' << LogicMem.size();
@@ -651,7 +704,7 @@ string IfAST::codegen() {
 
     ofstream fout;
     fout.open(asmfile, ios::app);
-    fout << "IFFALSE " << s << " GOTO LABEL " << labelcount + 1 << endl;
+    fout << "IF " << s << " GOTO LABEL " << labelcount + 1 << endl;
     fout.close();
 
     for (auto it : this->Body) {
@@ -662,4 +715,16 @@ string IfAST::codegen() {
     fout << "LABEL " << ++labelcount << endl;;
     fout.close();
     return "";
+}
+
+string ConststringAST::codegen() {
+    ofstream fout;
+    fout.open(asmfile, ios::app);
+    stringstream ss;
+    ss << 't' << LogicMem.size();
+    string s;
+    ss >> s;
+    LogicMem[s] = 0;
+    fout << s << " = s: " << Content << endl;
+    return s;
 }
