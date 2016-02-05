@@ -300,6 +300,22 @@ static shared_ptr<ExprAST> ParseWhileExpr() {
     return shared_ptr<WhileAST>(new WhileAST(cond, body));
 }
 
+/*
+ * ifexpr
+ */
+static shared_ptr<ExprAST> ParseIfExpr() {
+    shared_ptr<ExprAST> cond = ParseConditionExpr();
+    vector<shared_ptr<ExprAST> > body;
+    while (CurTok != T_END) {
+        shared_ptr<ExprAST> e = ParseLocalExpression();
+        if (e)
+            body.push_back(e);
+        else return 0;
+    }
+    getNextToken();//eat end
+    return shared_ptr<IfAST>(new IfAST(cond, body));
+}
+
 /* localexpression           完整的表达式语法结束  左值表达式
  * ::= assignment | returnexpr
  * */
@@ -310,6 +326,8 @@ static shared_ptr<ExprAST> ParseLocalExpression() {
         return ParseAssignmentExpr();
     if (CurTok == T_WHILE)
         return ParseWhileExpr();
+    if (CurTok == T_IF)
+        return ParseIfExpr();
     fprintf(stderr, "non valid expression");
     return 0;
 }
@@ -364,6 +382,8 @@ static shared_ptr<ExprAST> ParseTopLevelExpr() {
     shared_ptr<ExprAST> E;
     if (CurTok == T_WHILE)
         E = ParseWhileExpr();
+    else if (CurTok == T_IF)
+        E = ParseIfExpr();
     else E = ParseAssignmentExpr();
     if (E) {
         return E;
@@ -465,16 +485,32 @@ string BinaryExprAST::codegen() {
     string raddr = RHS->codegen();
     ofstream fout;
     fout.open(asmfile, ios::app);
+
+    stringstream lss;
+    lss << 't' << LogicMem.size();
+    string ltmp;
+    lss >> ltmp;
+    LogicMem[ltmp] = 0;
+    fout << ltmp << " = " << laddr << endl;
+
+    stringstream rss;
+    rss << 't' << LogicMem.size();
+    string rtmp;
+    rss >> rtmp;
+    LogicMem[rtmp] = 0;
+    fout << rtmp << " = " << raddr << endl;
+
+
     stringstream ss;
     ss << 't' << LogicMem.size();
     string s;
     ss >> s;
     switch (Op) {
         case T_ADD:
-            fout << s << " + " << laddr << " " << raddr << endl;
+            fout << s << " + " << ltmp << " " << rtmp << endl;
             break;
         case T_MIN:
-            fout << s << " + " << laddr << " " << raddr << endl;
+            fout << s << " + " << ltmp << " " << rtmp << endl;
             break;
         default:
             break;
@@ -566,11 +602,18 @@ string ReturnAST::codegen() {
 }
 
 string WhileAST::codegen() {
-    condExpr->codegen();
+    string s = condExpr->codegen();
+
+    ofstream fout;
+    fout.open(asmfile, ios::app);
+    fout << "LABEL " << labelcount << endl;
+    fout << "IFFALSE " << s << " GOTO LABEL " << labelcount + 1 << endl;
+    fout.close();
+
     for (auto it : this->Body) {
         it->codegen();
     }
-    ofstream fout;
+
     fout.open(asmfile, ios::app);
     fout << "GOTO LABEL " << labelcount << endl;
     fout << "LABEL " << ++labelcount << endl;;
@@ -578,13 +621,45 @@ string WhileAST::codegen() {
     return "";
 }
 
-string ConditionAST::codegen() {
-    ofstream fout;
-    fout.open(asmfile, ios::app);
-    fout << "LABEL " << labelcount << endl;
+string ConditionAST::codegen() {    //条件表达式一般是被其他控制结构的codegen()调用,所以这里返回值要特殊处理一下.
+    string s;
     string l = this->LHS->codegen();
     string r = this->RHS->codegen();
-    fout << "IFFALSE " << l << this->Cond << r << " GOTO LABEL " << labelcount + 1 << endl;
+
+    ofstream fout;
+    fout.open(asmfile, ios::app);
+    stringstream lss;
+    lss << 't' << LogicMem.size();
+    string ltmp;
+    lss >> ltmp;
+    LogicMem[ltmp] = 0;
+    fout << ltmp << " = " << l << endl;
+
+    stringstream rss;
+    rss << 't' << LogicMem.size();
+    string rtmp;
+    rss >> rtmp;
+    LogicMem[rtmp] = 0;
+    fout << rtmp << " = " << r << endl;
+
+    s = ltmp + " " + this->Cond + " " + rtmp;
+    return s;
+}
+
+string IfAST::codegen() {
+    string s = condExpr->codegen();
+
+    ofstream fout;
+    fout.open(asmfile, ios::app);
+    fout << "IFFALSE " << s << " GOTO LABEL " << labelcount + 1 << endl;
+    fout.close();
+
+    for (auto it : this->Body) {
+        it->codegen();
+    }
+
+    fout.open(asmfile, ios::app);
+    fout << "LABEL " << ++labelcount << endl;;
     fout.close();
     return "";
 }
