@@ -4,7 +4,8 @@
 
 #include "Token.h"
 #include <fstream>
-
+//TODO add '+' to regex engine is better
+//TODO  正则引擎不是贪婪的,所以使用过程中存在一个冲突导致bug出现
 #define REX_NUMBER "(0|1|2|3|4|5|6|7|8|9)"
 #define REX_CHAR "(A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|W|X|Y|Z|a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z)"
 enum TokenSymbol {
@@ -21,9 +22,13 @@ enum TokenSymbol {
     T_BRACE_MR,
     T_BRACE_LL,
     T_BRACE_LR,
+    T_LTHAN,
+    T_GTHAN,
     T_GEQUAL,
     T_EQUAL,
+    T_EEQUAL,
     T_LEQUAL,
+    T_NON,
     T_ADD,
     T_MIN,
     T_MUL,
@@ -50,9 +55,10 @@ void Scan::getToken() {
                + string("|") + string(T_map[T_BRACE_MR])
                + string("|") + string(T_map[T_BRACE_LL])
                + string("|") + string(T_map[T_BRACE_LR])
-               + string("|") + string(T_map[T_GEQUAL])
+               + string("|") + string(T_map[T_NON])
+               + string("|") + string(T_map[T_GTHAN])
+               + string("|") + string(T_map[T_LTHAN])
                + string("|") + string(T_map[T_EQUAL])
-               + string("|") + string(T_map[T_LEQUAL])
                + string("|") + string(T_map[T_ADD])
                + string("|") + string(T_map[T_MIN])
                + string("|") + string(T_map[T_MUL])
@@ -84,7 +90,8 @@ void Scan::getToken() {
                 ttoken->value = tmp;
                 ttoken->lineIndex = line;
                 list_token.push_back(ttoken);
-                out<<"Line:"<<ttoken->lineIndex<<" At:"<<ttoken->start<<" TokenType:"<<ttoken->token<<" Value="<<tmp<<endl;
+                out << "Line:" << ttoken->lineIndex << " At:" << ttoken->start << " TokenType:" << ttoken->token <<
+                " Value= " << tmp << endl;
             }
         }
     }
@@ -93,24 +100,24 @@ void Scan::getToken() {
 }
 
 Scan::Scan() {
-    T_map.insert(
-            pair<int, string>(T_IDENTIFIER, string(REX_CHAR) + string("*")));//TODO add '+' to regex engine is better
+    T_map.insert(pair<int, string>(T_IDENTIFIER, string(REX_CHAR) + string("*")));
     T_map.insert(pair<int, string>(T_NUMBER,     string(REX_NUMBER) + string("*")));
-    T_map.insert(pair<int, string>(T_BRACE_SL,   string("\\(")));
-    T_map.insert(pair<int, string>(T_BRACE_SR,   string("\\)")));
-    T_map.insert(pair<int, string>(T_BRACE_ML,   string("\\[")));
-    T_map.insert(pair<int, string>(T_BRACE_MR,   string("\\]")));
-    T_map.insert(pair<int, string>(T_BRACE_LL,   string("\\{")));
-    T_map.insert(pair<int, string>(T_BRACE_LR,   string("\\}")));
-    T_map.insert(pair<int, string>(T_GEQUAL, string("\\>")));
-    T_map.insert(pair<int, string>(T_EQUAL,      string("\\=")));
-    T_map.insert(pair<int, string>(T_LEQUAL, string("\\<")));
+    T_map.insert(pair<int, string>(T_BRACE_SL, string("\\(")));
+    T_map.insert(pair<int, string>(T_BRACE_SR, string("\\)")));
+    T_map.insert(pair<int, string>(T_BRACE_ML, string("\\[")));
+    T_map.insert(pair<int, string>(T_BRACE_MR, string("\\]")));
+    T_map.insert(pair<int, string>(T_BRACE_LL, string("\\{")));
+    T_map.insert(pair<int, string>(T_BRACE_LR, string("\\}")));
+    T_map.insert(pair<int, string>(T_LTHAN, string("\\<")));
+    T_map.insert(pair<int, string>(T_GTHAN, string("\\>")));
+    T_map.insert(pair<int, string>(T_EQUAL, string("\\=")));
+    T_map.insert(pair<int, string>(T_NON, string("\\!")));
     T_map.insert(pair<int, string>(T_ADD, string("\\+")));
     T_map.insert(pair<int, string>(T_MIN, string("\\-")));
     T_map.insert(pair<int, string>(T_MUL, string("\\*")));
     T_map.insert(pair<int, string>(T_DIV, string("\\/")));
-    T_map.insert(pair<int, string>(T_COMMA,      string("\\,")));
-    T_map.insert(pair<int, string>(T_BLANK,      string("\32*")));
+    T_map.insert(pair<int, string>(T_COMMA, string("\\,")));
+    T_map.insert(pair<int, string>(T_BLANK, string("\32*")));
 }
 
 int Scan::getTokenId(string s) {
@@ -125,6 +132,9 @@ int Scan::getTokenId(string s) {
     if (s == "]")                  return T_BRACE_MR;
     if (s == "{")                  return T_BRACE_LL;
     if (s == "}")                  return T_BRACE_LR;
+    if (s == ">") return T_GTHAN;
+    if (s == "<") return T_LTHAN;
+    if (s == "!") return T_NON;
     if (s == "=")                  return T_EQUAL;
     if (s == "+"||s == "-")        return T_ADD;
     if (s == "*"||s == "/")        return T_MUL;
@@ -133,6 +143,7 @@ int Scan::getTokenId(string s) {
     if (s == "extern") return T_EXTERN;
     if (s == "end") return T_END;
     if (s == "return") return T_RETURN;
+
     for (int i = 0; i < s.size(); ++i) {
         if (!(s[i] >= '0' && s[i] <= '9'))
             break;

@@ -20,9 +20,13 @@ enum TokenSymbol {
     T_BRACE_MR,
     T_BRACE_LL,
     T_BRACE_LR,
+    T_LTHAN,
+    T_GTHAN,
     T_GEQUAL,
     T_EQUAL,
+    T_EEQUAL,
     T_LEQUAL,
+    T_NON,
     T_ADD,
     T_MIN,
     T_MUL,
@@ -36,6 +40,7 @@ enum TokenSymbol {
 };
 
 //static map<string, IRitem* > IRTable;
+static int labelcount;
 static map<string, int> LogicMem;
 static string asmfile = "/Users/TanGreen/ClionProjects/Woo/Debug/asm.txt";
 static int precedenceArray[T_BLANK + 1];
@@ -82,6 +87,7 @@ static int gettok() {
     return -1;
 }
 
+static shared_ptr<ExprAST> ParseLocalExpression();
 //
 static int getNextToken() {
     return CurTok = gettok();
@@ -209,15 +215,62 @@ static shared_ptr<ExprAST> ParseExpression() {
     return ParseBinOpRHS(1, LHS);
 }
 
+/* conditionexpr
+ * */
+static shared_ptr<ConditionAST> ParseConditionExpr() {
+    getNextToken(); // eat cond symbol
+    shared_ptr<ExprAST> lhs = ParseExpression();
+    string cond = "";
+    switch (CurTok) {
+        case T_EQUAL:
+            getNextToken();
+            if (CurTok == T_EQUAL) {
+                cond = "==";
+                getNextToken();
+            }
+            else cond = "=";
+            break;
+        case T_GTHAN:
+            getNextToken();
+            if (CurTok == T_EQUAL) {
+                cond = ">=";
+                getNextToken();
+            }
+            else cond = ">";
+            break;
+        case T_LTHAN:
+            getNextToken();
+            if (CurTok == T_EQUAL) {
+                cond = "<=";
+                getNextToken();
+            }
+            else cond = "<";
+            break;
+        case T_NON:
+            getNextToken();
+            if (CurTok == T_EQUAL) {
+                cond = "!=";
+                getNextToken();
+            }
+            else return 0;
+            break;
+        default:
+            break;
+    }
+    if (cond != "") {
+        shared_ptr<ExprAST> rhs = ParseExpression();
+        return shared_ptr<ConditionAST>(new ConditionAST(lhs, rhs, cond));
+    } else return 0;
+}
 
 /* assignmentexpr
  * */
-static shared_ptr<AssignmentAST> ParseAssignmentExpr() {
+static shared_ptr<ExprAST> ParseAssignmentExpr() {
     shared_ptr<ExprAST> var = ParseIdentifierExpr();
     if (!var)
         return 0;
     if (CurTok != T_EQUAL)
-        return shared_ptr<AssignmentAST>(new AssignmentAST(var, shared_ptr<ExprAST>(new ExprAST))); //int a 令a初始化为0
+        return var;
     getNextToken(); //eat '='
     shared_ptr<ExprAST> expr = ParseExpression();
     if (!expr)
@@ -232,6 +285,21 @@ static shared_ptr<ExprAST> ParseReturnExpr() {
     return shared_ptr<ExprAST>(new ReturnAST(ParseExpression()));
 }
 
+/* whileexpr
+ * */
+static shared_ptr<ExprAST> ParseWhileExpr() {
+    shared_ptr<ExprAST> cond = ParseConditionExpr();
+    vector<shared_ptr<ExprAST> > body;
+    while (CurTok != T_END) {
+        shared_ptr<ExprAST> e = ParseLocalExpression();
+        if (e)
+            body.push_back(e);
+        else return 0;
+    }
+    getNextToken();//eat end
+    return shared_ptr<WhileAST>(new WhileAST(cond, body));
+}
+
 /* localexpression           完整的表达式语法结束  左值表达式
  * ::= assignment | returnexpr
  * */
@@ -240,6 +308,8 @@ static shared_ptr<ExprAST> ParseLocalExpression() {
         return ParseReturnExpr();
     if (CurTok == T_IDENTIFIER)
         return ParseAssignmentExpr();
+    if (CurTok == T_WHILE)
+        return ParseWhileExpr();
     fprintf(stderr, "non valid expression");
     return 0;
 }
@@ -285,15 +355,16 @@ static shared_ptr<FunctionAST> ParseDefinition() {
     return 0;
 }
 
-
-
-
 /* toplevelexpr
  * ::= expression
  * ::= assignment
+ * ::= conditionexpr
  * */
 static shared_ptr<ExprAST> ParseTopLevelExpr() {
-    shared_ptr<ExprAST> E = ParseAssignmentExpr();
+    shared_ptr<ExprAST> E;
+    if (CurTok == T_WHILE)
+        E = ParseWhileExpr();
+    else E = ParseAssignmentExpr();
     if (E) {
         return E;
     } else return 0;
@@ -355,16 +426,17 @@ static void MainLoop() {
 
 Parse::Parse(list<Token *> &list) {
     Tokenlist = list;
+}
+
+
+void Parse::test() {
     it = Tokenlist.begin();
     it--;
     getNextToken();
     CurTok = (*it)->token;
     precedenceArray[T_ADD] = 20;
     precedenceArray[T_MUL] = 30;
-}
-
-
-void Parse::test() {
+    labelcount = 0;
     MainLoop();
 }
 
@@ -378,6 +450,7 @@ string NumberExprAST::codegen() {
     ss << this->Val;
     string s;
     ss >> s;
+    s = "d: " + s;
     LogicMem[s] = this->Val;
     return s;
 }
@@ -420,13 +493,19 @@ string CallExprAST::codegen() {
         params.push_back(pa->codegen());
     }
     for (auto t : params) {
-        fout << "param " << t << endl;
+        stringstream ss;
+        ss << 't' << LogicMem.size();
+        string s;
+        ss >> s;
+        fout << s << " = " << t << endl;
+        fout << "PARAM " << s << endl;
+        LogicMem[s] = 0;
     }
     stringstream ss;
     ss << 't' << LogicMem.size();
     string s;
     ss >> s;
-    fout << s << " = " << "call " << this->Callna << " " << params.size() << endl;
+    fout << s << " = " << "CALL " << this->Callna << " " << params.size() << endl;
     LogicMem[s] = 0;
     fout.close();
     return s;
@@ -437,7 +516,7 @@ string PrototypeAST::codegen() {
     fout.open(asmfile, ios::app);
     fout << "FUNCTION " << this->Name << endl;
     for (auto tmp : this->Args) {
-        fout << "param " << tmp << endl;
+        fout << "PARAM " << tmp << endl;
     }
 
     fout.close();
@@ -450,6 +529,9 @@ string FunctionAST::codegen() {
     for (auto tmp : this->Body) {
         tmp->codegen();
     }
+    ofstream fout;
+    fout.open(asmfile, ios::app);
+    fout << "EXIST" << endl;
     return "";
 }
 
@@ -481,4 +563,28 @@ string ReturnAST::codegen() {
     LogicMem[s] = 0;
     fout.close();
     return s;
+}
+
+string WhileAST::codegen() {
+    condExpr->codegen();
+    for (auto it : this->Body) {
+        it->codegen();
+    }
+    ofstream fout;
+    fout.open(asmfile, ios::app);
+    fout << "GOTO LABEL " << labelcount << endl;
+    fout << "LABEL " << ++labelcount << endl;;
+    fout.close();
+    return "";
+}
+
+string ConditionAST::codegen() {
+    ofstream fout;
+    fout.open(asmfile, ios::app);
+    fout << "LABEL " << labelcount << endl;
+    string l = this->LHS->codegen();
+    string r = this->RHS->codegen();
+    fout << "IFFALSE " << l << this->Cond << r << " GOTO LABEL " << labelcount + 1 << endl;
+    fout.close();
+    return "";
 }

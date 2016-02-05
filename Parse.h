@@ -24,7 +24,6 @@ enum VaribleType {
 class Parse {
 public:
     Parse(list<Token *> &list);
-
     void test();
 };
 
@@ -93,13 +92,23 @@ public:
     FunctionAST(shared_ptr<PrototypeAST> proto, vector<shared_ptr<ExprAST> > body) : Proto(proto), Body(body) { }
 };
 
+//condition
+class ConditionAST : public ExprAST {
+    shared_ptr<ExprAST> LHS;
+    shared_ptr<ExprAST> RHS;
+    string Cond;
+public:
+    string codegen();
+
+    ConditionAST(shared_ptr<ExprAST> lhs, shared_ptr<ExprAST> rhs, string cond) : LHS(lhs), RHS(rhs), Cond(cond) { }
+};
+
 //assignment
 class AssignmentAST : public ExprAST {
     shared_ptr<ExprAST> Var;
     shared_ptr<ExprAST> RHS;
 public:
     string codegen();
-
     AssignmentAST(shared_ptr<ExprAST> var, shared_ptr<ExprAST> rhs) : Var(var), RHS(rhs) { }
 };
 
@@ -108,12 +117,18 @@ class ReturnAST : public ExprAST {
     shared_ptr<ExprAST> rtVal;
 public:
     string codegen();
-
     ReturnAST(shared_ptr<ExprAST> var) : rtVal(var) { }
 };
 
 //while
 class WhileAST : public ExprAST {
+    shared_ptr<ExprAST> condExpr;
+    vector<shared_ptr<ExprAST> > Body;
+public:
+    WhileAST(shared_ptr<ExprAST> cexpr, vector<shared_ptr<ExprAST> > body) : condExpr(cexpr), Body(body) {
+    }
+
+    string codegen();
 };
 
 //foreach
@@ -121,6 +136,17 @@ class ForeachAST : public ExprAST {
 
 };
 
+//built-in function
+class builtinfunctionAST : public ExprAST {
+    string Name;
+    shared_ptr<ExprAST> Args;
+public:
+    builtinfunctionAST(string functionname, shared_ptr<ExprAST> args) : Name(functionname), Args(args) {
+
+    }
+
+    string codegen();
+};
 //IR items
 class IRitem {
 public:

@@ -1,0 +1,17 @@
+
+FUNCTION add
+PARAM a
+PARAM b
+t2 + a b
+RETURN t3 t2
+EXIST
+t7 = d: 1
+PARAM t7
+t8 = d: 2
+PARAM t8
+t9 = CALL add 2
+t10 = t9
+c = t10
+t11 = c
+PARAM t11
+t12 = CALL print 1
