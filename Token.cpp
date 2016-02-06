@@ -39,6 +39,7 @@ enum TokenSymbol {
     T_RETURN,
     T_SQUOTE,
     T_DQUOTE,
+    T_ESCAPE,
     T_BLANK
 
 };
@@ -68,6 +69,7 @@ void Scan::getToken() {
                + string("|") + string(T_map[T_COMMA])
                + string("|") + string(T_map[T_SQUOTE])
                + string("|") + string(T_map[T_DQUOTE])
+               + string("|") + string(T_map[T_ESCAPE])
                + string("|") + string(T_map[T_BLANK]);
 
     RexHandle rh;
@@ -124,6 +126,7 @@ Scan::Scan() {
     T_map.insert(pair<int, string>(T_COMMA, string("\\,")));
     T_map.insert(pair<int, string>(T_SQUOTE, string("\\'")));
     T_map.insert(pair<int, string>(T_DQUOTE, string("\\\"")));
+    T_map.insert(pair<int, string>(T_ESCAPE, string("\\\\")));
     T_map.insert(pair<int, string>(T_BLANK, string("\\ ")));   //here blank don't need escape !!!! WTF
 
 }
@@ -144,8 +147,10 @@ int Scan::getTokenId(string s) {
     if (s == "<") return T_LTHAN;
     if (s == "!") return T_NON;
     if (s == "=")                  return T_EQUAL;
-    if (s == "+"||s == "-")        return T_ADD;
-    if (s == "*"||s == "/")        return T_MUL;
+    if (s == "+") return T_ADD;
+    if (s == "-") return T_MIN;
+    if (s == "*") return T_MUL;
+    if (s == "/") return T_DIV;
     if (s == ",")                  return T_COMMA;
     if (s == "'") return T_SQUOTE;
     if (s == "\"") return T_DQUOTE;
@@ -154,6 +159,7 @@ int Scan::getTokenId(string s) {
     if (s == "end") return T_END;
     if (s == "return") return T_RETURN;
     if (s == " ") return T_BLANK;
+    if (s == "\\") return T_ESCAPE;
 
     for (int i = 0; i < s.size(); ++i) {
         if (!(s[i] >= '0' && s[i] <= '9'))

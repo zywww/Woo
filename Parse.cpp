@@ -37,6 +37,7 @@ enum TokenSymbol {
     T_RETURN,
     T_SQUOTE,
     T_DQUOTE,
+    T_ESCAPE,
     T_BLANK
 
 };
@@ -482,7 +483,7 @@ void Parse::test() {
             if (it == Tokenlist.end())
                 break;
             while ((((*it)->token) != T_DQUOTE) && (((*it)->token) != T_SQUOTE)) {
-                //cout<<"2:"<<(*it)->value<<endl;
+                cout << "2:" << (*it)->value << endl;
                 (*it)->token = T_IDENTIFIER;
                 if (it == Tokenlist.end())
                     break;
@@ -494,6 +495,7 @@ void Parse::test() {
             it = Tokenlist.erase(it);
             --it;
         }
+        //cout<<"4:"<<(*it)->value<<endl;
     }
 
     it = Tokenlist.begin();
@@ -501,7 +503,9 @@ void Parse::test() {
     getNextToken();
     CurTok = (*it)->token;
     precedenceArray[T_ADD] = 20;
+    precedenceArray[T_MIN] = 20;
     precedenceArray[T_MUL] = 30;
+    precedenceArray[T_DIV] = 30;
     labelcount = 0;
     MainLoop();
 }
@@ -557,7 +561,13 @@ string BinaryExprAST::codegen() {
             fout << s << " + " << ltmp << " " << rtmp << endl;
             break;
         case T_MIN:
-            fout << s << " + " << ltmp << " " << rtmp << endl;
+            fout << s << " - " << ltmp << " " << rtmp << endl;
+            break;
+        case T_MUL:
+            fout << s << " * " << ltmp << " " << rtmp << endl;
+            break;
+        case T_DIV:
+            fout << s << " / " << ltmp << " " << rtmp << endl;
             break;
         default:
             break;
@@ -654,7 +664,10 @@ string WhileAST::codegen() {
     ofstream fout;
     fout.open(asmfile, ios::app);
 
-    fout << "IF " << s << " GOTO LABEL " << labelcount + 1 << endl;
+    int record = labelcount;
+    int record2 = record + 1;
+
+    fout << "IF " << s << " GOTO LABEL " << ++labelcount << endl;
     fout.close();
 
     for (auto it : this->Body) {
@@ -662,8 +675,8 @@ string WhileAST::codegen() {
     }
 
     fout.open(asmfile, ios::app);
-    fout << "GOTO LABEL " << labelcount << endl;
-    fout << "LABEL " << ++labelcount << endl;;
+    fout << "GOTO LABEL " << record << endl;
+    fout << "LABEL " << record2 << endl;;
     fout.close();
     return "";
 }
@@ -704,7 +717,10 @@ string IfAST::codegen() {
 
     ofstream fout;
     fout.open(asmfile, ios::app);
-    fout << "IF " << s << " GOTO LABEL " << labelcount + 1 << endl;
+    fout << "IF " << s << " GOTO LABEL " << ++labelcount << endl;
+
+    int record = labelcount; //记住label
+
     fout.close();
 
     for (auto it : this->Body) {
@@ -712,7 +728,7 @@ string IfAST::codegen() {
     }
 
     fout.open(asmfile, ios::app);
-    fout << "LABEL " << ++labelcount << endl;;
+    fout << "LABEL " << record << endl;
     fout.close();
     return "";
 }
