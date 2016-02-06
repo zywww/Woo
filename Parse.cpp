@@ -46,17 +46,19 @@ enum TokenSymbol {
 static int labelcount;
 static map<string, int> LogicMem;
 static string asmfile;
+static string rawcodefile;
 static int precedenceArray[T_BLANK + 1];  //all initial to 0
 static list<Token *> Tokenlist;
-static list<Token *>::iterator it;
+static list<Token *> TokenlistCopy;
+static list<Token *>::iterator topfileit;
 static int CurTok;
 static string IdentifierStr;  // Filled in if T_IDENTIFIER
 static int NumVal;              // Filled in if T_NUMBER
 
 //
 static int gettok() {
-    if (++it != Tokenlist.end()) {
-        Token *tmp = *it;
+    if (++topfileit != Tokenlist.end()) {
+        Token *tmp = *topfileit;
         switch (tmp->token) {
             case T_NUMBER:
                 NumVal = atoi(tmp->value.c_str());
@@ -103,20 +105,10 @@ static int getTokPrecedence() {
 }
 
 // Error*
-shared_ptr<ExprAST> Error(const char *Str) {
-    fprintf(stderr, "Error: %s\n", Str);
-    return 0;
+shared_ptr<ExprAST> Error(string Str) {
+    throw runtime_error(Str.c_str());
 }
 
-shared_ptr<PrototypeAST> ErrorP(const char *Str) {
-    Error(Str);
-    return 0;
-}
-
-shared_ptr<FunctionAST> ErrorF(const char *Str) {
-    Error(Str);
-    return 0;
-}
 
 static shared_ptr<ExprAST> ParseExpression();
 
@@ -140,8 +132,10 @@ static shared_ptr<ExprAST> ParseIdentifierExpr() {
                 getNextToken();  //eat ')'
                 break;
             }
-            if (CurTok != T_COMMA)
-                return Error("Expected ')' or ',' in argument list\n");
+            if (CurTok != T_COMMA) {
+                string errormsg = "funcion " + IdName + " : expected ')' or ',' in argument list";
+                return Error(errormsg);
+            }
             getNextToken(); //eat ','
         }
     }
@@ -168,6 +162,7 @@ static shared_ptr<ExprAST> ParseConststringExpr() {
     while (CurTok != T_SQUOTE && CurTok != T_DQUOTE) {
         tmp = tmp + IdentifierStr;
         getNextToken();
+        if (CurTok == -1) return Error("string didn't have end quote");
     }
     shared_ptr<ExprAST> result = shared_ptr<ExprAST>(new ConststringAST(tmp));
     getNextToken();
@@ -182,7 +177,7 @@ static shared_ptr<ExprAST> ParseParenExpr() {
     shared_ptr<ExprAST> exp = ParseExpression();
     if (!exp) return 0;
     if (CurTok != T_BRACE_SR)
-        return Error("expected an ')'    ");
+        return Error("expected an ')' ");
     getNextToken(); //eat ')'
     return exp;
 }
@@ -238,6 +233,8 @@ static shared_ptr<ExprAST> ParseExpression() {
     auto LHS = ParsePrimary();
     if (!LHS)
         return 0;
+    if (LHS->getType() == Ty_string)
+        return LHS;
     return ParseBinOpRHS(1, LHS);
 }
 
@@ -322,6 +319,7 @@ static shared_ptr<ExprAST> ParseWhileExpr() {
             body.push_back(e);
         else return 0;
     }
+    if (CurTok != T_END) Error("'while' statement should end by 'end' ");
     getNextToken();//eat end
     return shared_ptr<WhileAST>(new WhileAST(cond, body));
 }
@@ -336,8 +334,9 @@ static shared_ptr<ExprAST> ParseIfExpr() {
         shared_ptr<ExprAST> e = ParseLocalExpression();
         if (e)
             body.push_back(e);
-        else return 0;
+        else break;
     }
+    if (CurTok != T_END) Error("'if' statement should end by 'end' ");
     getNextToken();//eat end
     return shared_ptr<IfAST>(new IfAST(cond, body));
 }
@@ -354,7 +353,6 @@ static shared_ptr<ExprAST> ParseLocalExpression() {
         return ParseWhileExpr();
     if (CurTok == T_IF)
         return ParseIfExpr();
-    fprintf(stderr, "non valid expression");
     return 0;
 }
 
@@ -364,15 +362,15 @@ static shared_ptr<ExprAST> ParseLocalExpression() {
  * */
 static shared_ptr<PrototypeAST> ParsePrototype() {
     if (CurTok != T_IDENTIFIER)
-        return ErrorP("Expected function name in prototype");
+        Error("expected function name in prototype");
     string FnName = IdentifierStr;
     getNextToken();
     if (CurTok != T_BRACE_SL)
-        return ErrorP("Expected '(' in prototype");
+        Error("expected '(' in prototype");
     vector<string> ArgNames;
     while (getNextToken() != T_BRACE_SR) {
         if (CurTok == T_IDENTIFIER)
-            ArgNames.push_back((*it)->value);
+            ArgNames.push_back((*topfileit)->value);
     }
     getNextToken();  // eat ')'.
     return shared_ptr<PrototypeAST>(new PrototypeAST(FnName, ArgNames));
@@ -395,7 +393,8 @@ static shared_ptr<FunctionAST> ParseDefinition() {
         }
         else body.push_back(E);
     }
-    fprintf(stderr, "expect a expression or missing 'end'.\n");
+    if (CurTok == -1) Error("function definition should end by 'end'");
+    else Error("invalid expression statement");
     return 0;
 }
 
@@ -410,7 +409,9 @@ static shared_ptr<ExprAST> ParseTopLevelExpr() {
         E = ParseWhileExpr();
     else if (CurTok == T_IF)
         E = ParseIfExpr();
-    else E = ParseAssignmentExpr();
+    else if (CurTok == T_IDENTIFIER)
+        E = ParseAssignmentExpr();
+    else Error("invalid expression statement");
     if (E) {
         return E;
     } else return 0;
@@ -426,7 +427,7 @@ static shared_ptr<PrototypeAST> ParseExtern() {
 static void HandleDefinition() {
     if (shared_ptr<ExprAST> E = ParseDefinition()) {
         E->codegen();
-        fprintf(stderr, "Parsed a function definition.\n");
+        //cout<<"Parsed a function definition.\n";
     } else {
         getNextToken();
     }
@@ -434,7 +435,7 @@ static void HandleDefinition() {
 
 static void HandleExtern() {
     if (shared_ptr<ExprAST> E = ParseExtern()) {
-        fprintf(stderr, "Parsed an extern\n");
+        //cout<<"Parsed an extern\n";
     } else {
         getNextToken();
     }
@@ -443,7 +444,7 @@ static void HandleExtern() {
 static void HandleTopLevelExpression() {
     if (shared_ptr<ExprAST> E = ParseTopLevelExpr()) {
         E->codegen();
-        fprintf(stderr, "Parsed a top-level expr\n");
+        //cout<<"Parsed a top-level expr\n";
     } else {
         getNextToken();
     }
@@ -451,28 +452,86 @@ static void HandleTopLevelExpression() {
 
 /// top ::= definition | external | expression | 'end'
 static void MainLoop() {
-    while (1) {
-        fprintf(stderr, "ready> ");
-        switch (CurTok) {
-            case -1:
-                return;
-            case T_DEF:
-                HandleDefinition();
-                break;
-            case T_EXTERN:
-                HandleExtern();
-                break;
-            default:
-                HandleTopLevelExpression();
-                break;
+    try {
+        while (1) {
+            switch (CurTok) {
+                case -1:
+                    cout << "Woo " << rawcodefile << ":" << endl;
+                    cout << "#######  success  #######" << endl;
+                    return;
+                case T_DEF:
+                    HandleDefinition();
+                    break;
+                case T_EXTERN:
+                    HandleExtern();
+                    break;
+                default:
+                    HandleTopLevelExpression();
+                    break;
+            }
         }
+    } catch (runtime_error e) {
+        if (topfileit == TokenlistCopy.end()) {
+            cout << "Woo " << rawcodefile << "(" << TokenlistCopy.back()->lineIndex << "," <<
+            TokenlistCopy.back()->start << ")" << ": ";
+            cout << "Error: " << e.what() << endl;
+            int length = 0;
+
+            for (auto it : TokenlistCopy) {
+                if (it->lineIndex == TokenlistCopy.back()->lineIndex) {
+                    cout << it->value;
+                    length += it->value.size();
+                }
+            }
+            cout << endl;
+
+            for (int i = 0; i < length; ++i) {
+                if (i == TokenlistCopy.back()->start) {
+                    cout << '^';
+                    continue;
+                }
+                if (i >= TokenlistCopy.back()->start && i <= TokenlistCopy.back()->end)
+                    cout << '~';
+                else
+                    cout << ' ';
+            }
+            return;
+        }
+
+        cout << "Woo " << rawcodefile << "(" << (*topfileit)->lineIndex << "," << (*topfileit)->start << ")" << ": ";
+        cout << "Error: " << e.what() << endl;
+        int length = 0;
+        for (auto it : TokenlistCopy) {
+            if (it->lineIndex == (*topfileit)->lineIndex) {
+                cout << it->value;
+                length += it->value.size();
+            }
+        }
+        cout << endl;
+
+        for (int i = 0; i < length; ++i) {
+            if (i == (*topfileit)->start) {
+                cout << '^';
+                continue;
+            }
+            if (i >= (*topfileit)->start && i <= (*topfileit)->end)
+                cout << '~';
+            else
+                cout << ' ';
+        }
+        return;
     }
 }
 
 
-Parse::Parse(list<Token *> &list, const string s) {
+Parse::Parse(list<Token *> &list, const string s, const string src) {
     Tokenlist = list;
+    TokenlistCopy = list;
     asmfile = s;
+    rawcodefile = src;
+    ofstream f;
+    f.open(asmfile, ios::trunc); //discard the contents when first open
+    f.close();
 }
 
 
@@ -485,7 +544,7 @@ void Parse::test() {
             if (it == Tokenlist.end())
                 break;
             while ((((*it)->token) != T_DQUOTE) && (((*it)->token) != T_SQUOTE)) {
-                cout << "2:" << (*it)->value << endl;
+                //cout << "2:" << (*it)->value << endl;
                 (*it)->token = T_IDENTIFIER;
                 if (it == Tokenlist.end())
                     break;
@@ -500,10 +559,10 @@ void Parse::test() {
         //cout<<"4:"<<(*it)->value<<endl;
     }
 
-    it = Tokenlist.begin();
-    --it;
+    topfileit = Tokenlist.begin();
+    --topfileit;
     getNextToken();
-    CurTok = (*it)->token;
+    CurTok = (*topfileit)->token;
     precedenceArray[T_ADD] = 20;
     precedenceArray[T_MIN] = 20;
     precedenceArray[T_MUL] = 30;

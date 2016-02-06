@@ -16,6 +16,7 @@ enum VaribleType {
     Ty_unknown,
     Ty_int,
     Ty_double,
+    Ty_varible,
     Ty_string,
     Ty_bincombo
 };
@@ -23,7 +24,7 @@ enum VaribleType {
 
 class Parse {
 public:
-    Parse(list<Token *> &list, const string s);
+    Parse(list<Token *> &list, const string s, const string src);
     void test();
 };
 
@@ -48,7 +49,7 @@ public:
 class VariableExprAST : public ExprAST {
     string Name;
 public:
-    unsigned int getType() { return Ty_string; }
+    unsigned int getType() { return Ty_varible; }
 
     string codegen();
     VariableExprAST(const string &name) : Name(name) { }
@@ -154,6 +155,10 @@ public:
     ConststringAST(const string s) : Content(s) {
     }
     string codegen();
+
+    unsigned int getType() {
+        return Ty_string;
+    }
 };
 
 //IR items
