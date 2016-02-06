@@ -23,7 +23,7 @@ void NfaToDfa::translate(Graph *nfa) {
 
 void out_vector(vector<struct seT> *a) {
     cout << "DStates: ";
-    for (int i = 0; i < a->size(); i++) {
+    for (unsigned long i = 0; i < a->size(); i++) {
         cout << " " << a->at(i).ID;
     }
     cout << endl << endl;
@@ -31,7 +31,7 @@ void out_vector(vector<struct seT> *a) {
 
 void out_set_vector(vector<struct seT> *a) {
     cout << "set_vector: " << endl;
-    for (int i = 0; i < a->size(); i++) {
+    for (unsigned long i = 0; i < a->size(); i++) {
         cout << " ID:" << a->at(i).ID;
         cout << " line:" << a->at(i).line << endl;
         for (int j = 0; j < a->at(i).state.size(); j++) {
@@ -42,7 +42,7 @@ void out_set_vector(vector<struct seT> *a) {
 }
 
 bool isElemexist(int x, vector<int> *a) {
-    for (int i = 0; i < a->size(); i++) {
+    for (unsigned long i = 0; i < a->size(); i++) {
         if (a->at(i) == x) return true;
     }
     return false;
@@ -62,7 +62,7 @@ void e_closure(GraphNode *node, vector<int> *closureNodes) {
 
 
 void deal_e_closure(Graph *nfa, vector<int> *endnodes, vector<int> *a) {
-    for (int i = 0; i < a->size(); i++) {
+    for (unsigned long i = 0; i < a->size(); i++) {
         GraphNode *this_node = nfa->graphNodes[a->at(i)];
         //cout << "node:" << a->at(i) << endl;
         vector<int> closureNodes;
@@ -217,8 +217,8 @@ void NfaToDfa::translate_nfa2dfa(Graph *nfa) {
         //out_vector(set_Dstates);
     }
 
-    for (int i = 0; i < set_Dstates->size(); i++) {
-        for (int j = 0; j < set_Dstates->at(i).state.size(); j++)
+    for (unsigned long i = 0; i < set_Dstates->size(); i++) {
+        for (unsigned long j = 0; j < set_Dstates->at(i).state.size(); j++)
             if (isElemexist(set_Dstates->at(i).state[j], &this->endnodes)) {
                 this->dfa_endnodes.push_back(set_Dstates->at(i).ID);
                 break;
@@ -233,7 +233,7 @@ void NfaToDfa::outGraph() {
     for (int i = 0; i < this->dfa.graphNodes.size(); i++) {
         t_node = this->dfa.graphNodes[i];
         cout << "ID:" << t_node->ID;
-        int num_link = t_node->LinkNodes.size();
+        unsigned long num_link = t_node->LinkNodes.size();
         if (num_link != 0) {
             for (; num_link > 0; num_link--)
                 cout << "  LinkNode_ID:" << t_node->LinkNodes[num_link - 1]->node->ID << " char:" <<
@@ -267,7 +267,7 @@ vector<pair<int, int> > NfaToDfa::stringTest(string &s) {
         }
         if (flag) {
             bool flag2 = false;
-            for (int j = 0; j < dfa_endnodes.size(); j++) {
+            for (j = 0; j < dfa_endnodes.size(); j++) {
                 if (node->ID == dfa_endnodes[j] && node->ID != dfa.graphNodes[0]->ID) {
                     vp.push_back(pair<int, int>(start, end - 1));
                     start = i;
@@ -293,7 +293,7 @@ vector<pair<int, int> > NfaToDfa::stringTest(string &s) {
             }
         }
         if (i == s.length() - 1 && !flag) {
-            for (int j = 0; j < dfa_endnodes.size(); j++) {
+            for (j = 0; j < dfa_endnodes.size(); j++) {
                 if (node->ID == dfa_endnodes[j]) {
                     vp.push_back(pair<int, int>(start, end - 1));
                 }

@@ -40,6 +40,9 @@ public:
 
     map<int, string> T_map;
     list<Token *> list_token;
+
+    string srcfile;
+    string outfile;
 };
 
 #endif //MYCOMPILER_TOKEN_H

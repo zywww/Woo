@@ -23,7 +23,7 @@ enum VaribleType {
 
 class Parse {
 public:
-    Parse(list<Token *> &list);
+    Parse(list<Token *> &list, const string s);
     void test();
 };
 

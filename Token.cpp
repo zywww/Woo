@@ -5,7 +5,7 @@
 #include "Token.h"
 #include <fstream>
 //TODO add '+' to regex engine is better
-//TODO  正则引擎不是贪婪的,所以使用过程中存在一个冲突导致bug出现
+//TODO  正则引擎不是贪婪的
 #define REX_NUMBER "(0|1|2|3|4|5|6|7|8|9)"
 #define REX_CHAR "(A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|W|X|Y|Z|a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z)"
 enum TokenSymbol {
@@ -61,16 +61,17 @@ void Scan::getToken() {
                + string("|") + string(T_map[T_NON])
                + string("|") + string(T_map[T_GTHAN])
                + string("|") + string(T_map[T_LTHAN])
-               + string("|") + string(T_map[T_EQUAL])
-               + string("|") + string(T_map[T_ADD])
-               + string("|") + string(T_map[T_MIN])
-               + string("|") + string(T_map[T_MUL])
-               + string("|") + string(T_map[T_DIV])
-               + string("|") + string(T_map[T_COMMA])
-               + string("|") + string(T_map[T_SQUOTE])
-               + string("|") + string(T_map[T_DQUOTE])
-               + string("|") + string(T_map[T_ESCAPE])
-               + string("|") + string(T_map[T_BLANK]);
+                               + string("|") + string(T_map[T_EQUAL])
+                               + string("|") + string(T_map[T_ADD])
+                               + string("|") + string(T_map[T_MIN])
+                               + string("|") + string(T_map[T_MUL])
+                               + string("|") + string(T_map[T_DIV])
+                               + string("|") + string(T_map[T_COMMA])
+                               + string("|") + string(T_map[T_SQUOTE])
+                               + string("|") + string(T_map[T_DQUOTE])
+                               + string("|") + string(T_map[T_ESCAPE])
+                               + string("|") + string(T_map[T_BLANK])
+                               + string("|") + string(T_map[-1]); //no use symnbol
 
     RexHandle rh;
     rh.setRextext(s);
@@ -78,8 +79,8 @@ void Scan::getToken() {
 
     fstream in;
     ofstream out;
-    in.open("/Users/TanGreen/ClionProjects/Woo/Debug/main.txt");
-    out.open("/Users/TanGreen/ClionProjects/Woo/Debug/out.txt",ios::trunc);
+    in.open(srcfile);
+    out.open(outfile, ios::trunc);
 
     string ts;
     int line = 0;
@@ -128,33 +129,33 @@ Scan::Scan() {
     T_map.insert(pair<int, string>(T_DQUOTE, string("\\\"")));
     T_map.insert(pair<int, string>(T_ESCAPE, string("\\\\")));
     T_map.insert(pair<int, string>(T_BLANK, string("\\ ")));   //here blank don't need escape !!!! WTF
-
+    T_map.insert(pair<int, string>(-1, string("\\~|\\@|\\#|\\$|\\^|\\_|\\?")));
 }
 
 int Scan::getTokenId(string s) {
-    if (s[0] == '\32')             return T_BLANK;
-    if (s == "string")             return T_STRING;
-    if (s == "int")                return T_INT;
-    if (s == "if")                 return T_IF;
-    if (s == "while")              return T_WHILE;
-    if (s == "(")                  return T_BRACE_SL;
-    if (s == ")")                  return T_BRACE_SR;
-    if (s == "[")                  return T_BRACE_ML;
-    if (s == "]")                  return T_BRACE_MR;
-    if (s == "{")                  return T_BRACE_LL;
-    if (s == "}")                  return T_BRACE_LR;
+    if (s[0] == '\32') return T_BLANK;
+    if (s == "string") return T_STRING;
+    if (s == "int") return T_INT;
+    if (s == "if") return T_IF;
+    if (s == "while") return T_WHILE;
+    if (s == "(") return T_BRACE_SL;
+    if (s == ")") return T_BRACE_SR;
+    if (s == "[") return T_BRACE_ML;
+    if (s == "]") return T_BRACE_MR;
+    if (s == "{") return T_BRACE_LL;
+    if (s == "}") return T_BRACE_LR;
     if (s == ">") return T_GTHAN;
     if (s == "<") return T_LTHAN;
     if (s == "!") return T_NON;
-    if (s == "=")                  return T_EQUAL;
+    if (s == "=") return T_EQUAL;
     if (s == "+") return T_ADD;
     if (s == "-") return T_MIN;
     if (s == "*") return T_MUL;
     if (s == "/") return T_DIV;
-    if (s == ",")                  return T_COMMA;
+    if (s == ",") return T_COMMA;
     if (s == "'") return T_SQUOTE;
     if (s == "\"") return T_DQUOTE;
-    if (s == "def")                return T_DEF;
+    if (s == "def") return T_DEF;
     if (s == "extern") return T_EXTERN;
     if (s == "end") return T_END;
     if (s == "return") return T_RETURN;

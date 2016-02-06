@@ -45,7 +45,7 @@ enum TokenSymbol {
 //static map<string, IRitem* > IRTable;
 static int labelcount;
 static map<string, int> LogicMem;
-static string asmfile = "/Users/TanGreen/ClionProjects/Woo/Debug/asm.txt";
+static string asmfile;
 static int precedenceArray[T_BLANK + 1];  //all initial to 0
 static list<Token *> Tokenlist;
 static list<Token *>::iterator it;
@@ -91,6 +91,7 @@ static int gettok() {
 }
 
 static shared_ptr<ExprAST> ParseLocalExpression();
+
 //
 static int getNextToken() {
     return CurTok = gettok();
@@ -469,14 +470,15 @@ static void MainLoop() {
 }
 
 
-Parse::Parse(list<Token *> &list) {
+Parse::Parse(list<Token *> &list, const string s) {
     Tokenlist = list;
+    asmfile = s;
 }
 
 
 void Parse::test() {
     //remove the no use blank  &&  change all of the string contents to T_IDENTIFIER
-    for (list<Token *>::iterator it = Tokenlist.begin(); it != Tokenlist.end(); it++) {
+    for (list<Token *>::iterator it = Tokenlist.begin(); it != Tokenlist.end(); ++it) {
         if ((((*it)->token) == T_DQUOTE) || (((*it)->token) == T_SQUOTE)) {
             //cout<<"1:"<<(*it)->value<<endl;
             ++it;
@@ -499,7 +501,7 @@ void Parse::test() {
     }
 
     it = Tokenlist.begin();
-    it--;
+    --it;
     getNextToken();
     CurTok = (*it)->token;
     precedenceArray[T_ADD] = 20;
