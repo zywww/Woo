@@ -1,0 +1,79 @@
+def heart()
+	ht="*"
+    i=1
+    while i<6
+        print("\n")
+        i=i+1
+    end
+
+    i=1
+    while i<4
+        j=1
+        while j<33-2*i
+            print(" ")
+            j=j+1
+        end
+        k=1
+        while k<4*i+2
+            print(ht)
+            k=k+1
+        end
+        l=1
+        while l<14-4*i
+            print(" ")
+            l=l+1
+        end
+        m=1
+        while m<4*i+2
+            print(ht)
+            m=m+1
+        end
+        print("\n")
+        i=i+1
+    end
+i=1
+    while i<4
+        j=1
+        while j<26
+            print(" ")
+            j=j+1
+        end
+        k=1
+        while k<30
+            print(ht)
+            k=k+1
+        end
+        print("\n")
+        i=i+1
+    end
+
+    i=7
+    while i>0
+        j=1
+        while j<41-2*i
+            print(" ")
+            j=j+1
+        end
+        k=1
+        while k<4*i
+            print(ht)
+            k=k+1
+        end
+        print("\n")
+        i=i-1
+    end
+
+    i=1
+    while i<40
+        print(" ")
+        i=i+1
+    end
+    print(ht)
+    i=1
+    while i<6
+        print("\n")
+        i=i+1
+    end
+end
+
+heart()
