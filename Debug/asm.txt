@@ -1,325 +1,276 @@
-FUNCTION fibonacci
-t0 = s: fibonacci sequence \n
-t1 = t0
-PARAM t1
-t2 = CALL print 1
-t5 = d: 0
+FUNCTION heart
+t1 = s: *
+t2 = t1
+ht = t2
+t5 = d: 1
 i = t5
-t8 = d: 1
-j = t8
-t10 = d: 1
-k = t10
 LABEL 1
+t7 = i
+t8 = d: 6
+IF t7 < t8 GOTO LABEL 2
+t9 = s: \n
+t10 = t9
+PARAM t10
+t11 = CALL print 1
 t12 = i
-t13 = d: 10
-IF t12 < t13 GOTO LABEL 2
-t14 = s:  
-t15 = s:  
-t16 = j
-PARAM t16
-t17 = t14
-PARAM t17
-t18 = k
-PARAM t18
-t19 = t15
-PARAM t19
-t20 = CALL print 4
-t21 = j
-t22 = k
-t23 + t21 t22
-t24 = t23
-j = t24
-t25 = k
-t26 = j
-t27 + t25 t26
-t28 = t27
-k = t28
-t29 = i
-t30 = d: 1
-t31 + t29 t30
-t32 = t31
-i = t32
+t13 = d: 1
+t14 + t12 t13
+t15 = t14
+i = t15
 GOTO LABEL 1
 LABEL 2
-t33 = s: \n
-t34 = t33
-PARAM t34
-t35 = CALL print 1
-EXIST
-FUNCTION heart
-t37 = s: *
-t38 = t37
-ht = t38
-t39 = d: 1
-i = t39
+t16 = d: 1
+i = t16
 LABEL 3
-t41 = i
-t42 = d: 6
-IF t41 < t42 GOTO LABEL 4
-t43 = s: \n
-t44 = t43
-PARAM t44
-t45 = CALL print 1
-t46 = i
-t47 = d: 1
-t48 + t46 t47
-t49 = t48
-i = t49
-GOTO LABEL 3
-LABEL 4
-t50 = d: 1
-i = t50
+t18 = i
+t19 = d: 4
+IF t18 < t19 GOTO LABEL 4
+t21 = d: 1
+j = t21
 LABEL 5
-t52 = i
-t53 = d: 4
-IF t52 < t53 GOTO LABEL 6
-t54 = d: 1
-j = t54
-LABEL 7
-t57 = d: 2
-t58 = i
-t59 * t57 t58
-t60 = d: 33
-t61 = t59
-t62 - t60 t61
-t63 = j
-t64 = t62
-IF t63 < t64 GOTO LABEL 8
-t65 = s:  
-t66 = t65
-PARAM t66
-t67 = CALL print 1
-t68 = j
-t69 = d: 1
-t70 + t68 t69
-t71 = t70
-j = t71
-GOTO LABEL 7
-LABEL 8
-t72 = d: 1
-k = t72
-LABEL 9
-t73 = d: 4
-t74 = i
-t75 * t73 t74
-t76 = t75
-t77 = d: 2
-t78 + t76 t77
-t79 = k
-t80 = t78
-IF t79 < t80 GOTO LABEL 10
-t81 = ht
-PARAM t81
-t82 = CALL print 1
-t83 = k
-t84 = d: 1
-t85 + t83 t84
-t86 = t85
-k = t86
-GOTO LABEL 9
-LABEL 10
-t88 = d: 1
-l = t88
-LABEL 11
-t90 = d: 4
-t91 = i
-t92 * t90 t91
-t93 = d: 14
-t94 = t92
-t95 - t93 t94
-t96 = l
-t97 = t95
-IF t96 < t97 GOTO LABEL 12
-t98 = s:  
-t99 = t98
-PARAM t99
-t100 = CALL print 1
-t101 = l
-t102 = d: 1
-t103 + t101 t102
-t104 = t103
-l = t104
-GOTO LABEL 11
-LABEL 12
-t106 = d: 1
-m = t106
-LABEL 13
-t107 = d: 4
-t108 = i
-t109 * t107 t108
-t110 = t109
-t111 = d: 2
-t112 + t110 t111
-t113 = m
-t114 = t112
-IF t113 < t114 GOTO LABEL 14
-t115 = ht
-PARAM t115
-t116 = CALL print 1
-t117 = m
-t118 = d: 1
-t119 + t117 t118
-t120 = t119
-m = t120
-GOTO LABEL 13
-LABEL 14
-t121 = s: \n
-t122 = t121
-PARAM t122
-t123 = CALL print 1
-t124 = i
-t125 = d: 1
-t126 + t124 t125
-t127 = t126
-i = t127
+t24 = d: 2
+t25 = i
+t26 * t24 t25
+t27 = d: 33
+t28 = t26
+t29 - t27 t28
+t30 = j
+t31 = t29
+IF t30 < t31 GOTO LABEL 6
+t32 = s:  
+t33 = t32
+PARAM t33
+t34 = CALL print 1
+t35 = j
+t36 = d: 1
+t37 + t35 t36
+t38 = t37
+j = t38
 GOTO LABEL 5
 LABEL 6
-t128 = d: 1
-i = t128
+t40 = d: 1
+k = t40
+LABEL 7
+t41 = d: 4
+t42 = i
+t43 * t41 t42
+t44 = t43
+t45 = d: 2
+t46 + t44 t45
+t47 = k
+t48 = t46
+IF t47 < t48 GOTO LABEL 8
+t49 = ht
+PARAM t49
+t50 = CALL print 1
+t51 = k
+t52 = d: 1
+t53 + t51 t52
+t54 = t53
+k = t54
+GOTO LABEL 7
+LABEL 8
+t56 = d: 1
+l = t56
+LABEL 9
+t58 = d: 4
+t59 = i
+t60 * t58 t59
+t61 = d: 14
+t62 = t60
+t63 - t61 t62
+t64 = l
+t65 = t63
+IF t64 < t65 GOTO LABEL 10
+t66 = s:  
+t67 = t66
+PARAM t67
+t68 = CALL print 1
+t69 = l
+t70 = d: 1
+t71 + t69 t70
+t72 = t71
+l = t72
+GOTO LABEL 9
+LABEL 10
+t74 = d: 1
+m = t74
+LABEL 11
+t75 = d: 4
+t76 = i
+t77 * t75 t76
+t78 = t77
+t79 = d: 2
+t80 + t78 t79
+t81 = m
+t82 = t80
+IF t81 < t82 GOTO LABEL 12
+t83 = ht
+PARAM t83
+t84 = CALL print 1
+t85 = m
+t86 = d: 1
+t87 + t85 t86
+t88 = t87
+m = t88
+GOTO LABEL 11
+LABEL 12
+t89 = s: \n
+t90 = t89
+PARAM t90
+t91 = CALL print 1
+t92 = i
+t93 = d: 1
+t94 + t92 t93
+t95 = t94
+i = t95
+GOTO LABEL 3
+LABEL 4
+t96 = d: 1
+i = t96
+LABEL 13
+t97 = i
+t98 = d: 4
+IF t97 < t98 GOTO LABEL 14
+t99 = d: 1
+j = t99
 LABEL 15
-t129 = i
-t130 = d: 4
-IF t129 < t130 GOTO LABEL 16
-t131 = d: 1
-j = t131
-LABEL 17
-t133 = j
-t134 = d: 26
-IF t133 < t134 GOTO LABEL 18
-t135 = s:  
-t136 = t135
-PARAM t136
-t137 = CALL print 1
-t138 = j
-t139 = d: 1
-t140 + t138 t139
-t141 = t140
-j = t141
-GOTO LABEL 17
-LABEL 18
-t142 = d: 1
-k = t142
-LABEL 19
-t144 = k
-t145 = d: 30
-IF t144 < t145 GOTO LABEL 20
-t146 = ht
-PARAM t146
-t147 = CALL print 1
-t148 = k
-t149 = d: 1
-t150 + t148 t149
-t151 = t150
-k = t151
-GOTO LABEL 19
-LABEL 20
-t152 = s: \n
-t153 = t152
-PARAM t153
-t154 = CALL print 1
-t155 = i
-t156 = d: 1
-t157 + t155 t156
-t158 = t157
-i = t158
+t101 = j
+t102 = d: 26
+IF t101 < t102 GOTO LABEL 16
+t103 = s:  
+t104 = t103
+PARAM t104
+t105 = CALL print 1
+t106 = j
+t107 = d: 1
+t108 + t106 t107
+t109 = t108
+j = t109
 GOTO LABEL 15
 LABEL 16
-t160 = d: 7
-i = t160
+t110 = d: 1
+k = t110
+LABEL 17
+t112 = k
+t113 = d: 30
+IF t112 < t113 GOTO LABEL 18
+t114 = ht
+PARAM t114
+t115 = CALL print 1
+t116 = k
+t117 = d: 1
+t118 + t116 t117
+t119 = t118
+k = t119
+GOTO LABEL 17
+LABEL 18
+t120 = s: \n
+t121 = t120
+PARAM t121
+t122 = CALL print 1
+t123 = i
+t124 = d: 1
+t125 + t123 t124
+t126 = t125
+i = t126
+GOTO LABEL 13
+LABEL 14
+t128 = d: 7
+i = t128
+LABEL 19
+t130 = i
+t131 = d: 0
+IF t130 > t131 GOTO LABEL 20
+t132 = d: 1
+j = t132
 LABEL 21
-t161 = i
-t162 = d: 0
-IF t161 > t162 GOTO LABEL 22
-t163 = d: 1
-j = t163
-LABEL 23
-t165 = d: 2
-t166 = i
-t167 * t165 t166
-t168 = d: 41
-t169 = t167
-t170 - t168 t169
-t171 = j
-t172 = t170
-IF t171 < t172 GOTO LABEL 24
-t173 = s:  
-t174 = t173
-PARAM t174
-t175 = CALL print 1
-t176 = j
-t177 = d: 1
-t178 + t176 t177
-t179 = t178
-j = t179
-GOTO LABEL 23
-LABEL 24
-t180 = d: 1
-k = t180
-LABEL 25
-t181 = d: 4
-t182 = i
-t183 * t181 t182
-t184 = k
-t185 = t183
-IF t184 < t185 GOTO LABEL 26
-t186 = ht
-PARAM t186
-t187 = CALL print 1
-t188 = k
-t189 = d: 1
-t190 + t188 t189
-t191 = t190
-k = t191
-GOTO LABEL 25
-LABEL 26
-t192 = s: \n
-t193 = t192
-PARAM t193
-t194 = CALL print 1
-t195 = i
-t196 = d: 1
-t197 - t195 t196
-t198 = t197
-i = t198
+t134 = d: 2
+t135 = i
+t136 * t134 t135
+t137 = d: 41
+t138 = t136
+t139 - t137 t138
+t140 = j
+t141 = t139
+IF t140 < t141 GOTO LABEL 22
+t142 = s:  
+t143 = t142
+PARAM t143
+t144 = CALL print 1
+t145 = j
+t146 = d: 1
+t147 + t145 t146
+t148 = t147
+j = t148
 GOTO LABEL 21
 LABEL 22
-t199 = d: 1
-i = t199
+t149 = d: 1
+k = t149
+LABEL 23
+t150 = d: 4
+t151 = i
+t152 * t150 t151
+t153 = k
+t154 = t152
+IF t153 < t154 GOTO LABEL 24
+t155 = ht
+PARAM t155
+t156 = CALL print 1
+t157 = k
+t158 = d: 1
+t159 + t157 t158
+t160 = t159
+k = t160
+GOTO LABEL 23
+LABEL 24
+t161 = s: \n
+t162 = t161
+PARAM t162
+t163 = CALL print 1
+t164 = i
+t165 = d: 1
+t166 - t164 t165
+t167 = t166
+i = t167
+GOTO LABEL 19
+LABEL 20
+t168 = d: 1
+i = t168
+LABEL 25
+t170 = i
+t171 = d: 40
+IF t170 < t171 GOTO LABEL 26
+t172 = s:  
+t173 = t172
+PARAM t173
+t174 = CALL print 1
+t175 = i
+t176 = d: 1
+t177 + t175 t176
+t178 = t177
+i = t178
+GOTO LABEL 25
+LABEL 26
+t179 = ht
+PARAM t179
+t180 = CALL print 1
+t181 = d: 1
+i = t181
 LABEL 27
-t201 = i
-t202 = d: 40
-IF t201 < t202 GOTO LABEL 28
-t203 = s:  
-t204 = t203
-PARAM t204
-t205 = CALL print 1
-t206 = i
-t207 = d: 1
-t208 + t206 t207
-t209 = t208
-i = t209
+t182 = i
+t183 = d: 6
+IF t182 < t183 GOTO LABEL 28
+t184 = s: \n
+t185 = t184
+PARAM t185
+t186 = CALL print 1
+t187 = i
+t188 = d: 1
+t189 + t187 t188
+t190 = t189
+i = t190
 GOTO LABEL 27
 LABEL 28
-t210 = ht
-PARAM t210
-t211 = CALL print 1
-t212 = d: 1
-i = t212
-LABEL 29
-t213 = i
-t214 = d: 6
-IF t213 < t214 GOTO LABEL 30
-t215 = s: \n
-t216 = t215
-PARAM t216
-t217 = CALL print 1
-t218 = i
-t219 = d: 1
-t220 + t218 t219
-t221 = t220
-i = t221
-GOTO LABEL 29
-LABEL 30
 EXIST
-t222 = CALL heart 0
-t223 = CALL fibonacci 0
+t191 = CALL heart 0
